@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Login from "./Login";
+import api from "../../config/axiosConfig";
 
 function Register({ isOpen, onClose, onSwitchToLogin }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -8,13 +8,15 @@ function Register({ isOpen, onClose, onSwitchToLogin }) {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
+    setIsLoading(true);
 
     try {
-      const res = await axios.post("/api/auth/register", {
+      const res = await api.post("/auth/register", {
         email,
         password,
         name,
@@ -33,6 +35,9 @@ function Register({ isOpen, onClose, onSwitchToLogin }) {
 
     } catch (err) {
       setMessage(err.response?.data?.message || "Something went wrong");
+    }
+    finally{
+      setIsLoading(false);
     }
   };
 
@@ -97,6 +102,7 @@ function Register({ isOpen, onClose, onSwitchToLogin }) {
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-2 outline-gray-300 border border-gray-300 rounded-md"
               required
+              disabled={isLoading}
             />
           </div>
           <div>
@@ -114,6 +120,7 @@ function Register({ isOpen, onClose, onSwitchToLogin }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 outline-gray-300 border border-gray-300 rounded-md"
+              disabled={isLoading}
             />
           </div>
 
@@ -127,6 +134,7 @@ function Register({ isOpen, onClose, onSwitchToLogin }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-2 outline-gray-300 border border-gray-300 rounded-md"
+              disabled={isLoading}
             />
           </div>
 

@@ -1,39 +1,53 @@
-import React, { useState, useEffect} from "react";
-import axios from 'axios';
-import {useNavigate} from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import api from "../../config/axiosConfig";
+import { useNavigate } from "react-router-dom";
 
 function Login({ isOpen, onClose, onSwitchToRegister }) {
-
-  const [isRegisterOpen, setRegisterOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) =>{
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("")
+    setMessage("");
+    setIsLoading(true);
 
     try {
-      const res = await axios.post('/api/auth/login',{
-        email, password
-      })
-      console.log(res.data)
-      setMessage(res.data.message)
+      const res = await api.post("/auth/login", {
+        email,
+        password,
+      });
+      console.log(res.data);
+      setMessage(res.data.message);
 
-      localStorage.setItem('user', JSON.stringify(res.data.user))
+      localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      setEmail("")
-      setPassword("")
+      setEmail("");
+      setPassword("");
 
-      navigate('/userdashboard')
-
+      const userRole = res.data.user.role;
+      setTimeout(() => {
+        switch (userRole) {
+          case "admin":
+            navigate("/admin/dashboard");
+            break;
+          case "coach":
+            navigate("/coach/dashboard");
+            break;
+          default:
+            navigate("/userdashboard");
+        }
+      }, 500);
     } catch (err) {
       setMessage(err.response?.data?.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
     }
-  }
-
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -67,7 +81,10 @@ function Login({ isOpen, onClose, onSwitchToRegister }) {
   };
 
   return (
-    <div onClick={handleBackDropClick} className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div
+      onClick={handleBackDropClick}
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    >
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8 relative animate-fadeIn">
         <button
           onClick={onClose}
@@ -90,6 +107,7 @@ function Login({ isOpen, onClose, onSwitchToRegister }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 outline-gray-300 border border-gray-300 rounded-md"
+              disabled = {isLoading}
             />
           </div>
 
@@ -103,6 +121,7 @@ function Login({ isOpen, onClose, onSwitchToRegister }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-2 outline-gray-300 border border-gray-300 rounded-md"
+              disabled={isLoading}
             />
           </div>
 
@@ -122,20 +141,20 @@ function Login({ isOpen, onClose, onSwitchToRegister }) {
           >
             Login
           </button>
-          {message &&(
-            <p className="mt-3 text-center">{message}</p>
-          )}
+          {message && <p className="mt-3 text-center">{message}</p>}
         </form>
 
         <div className="mt-5 text-center flex flex-row justify-center space-x-1">
           <p className="text-sm text-gray-600">Don't have an account?</p>
-          <a onClick={onSwitchToRegister} className="text-sm text-yellow-500 hover:text-yellow-600 cursor-pointer ">
+          <a
+            onClick={onSwitchToRegister}
+            className="text-sm text-yellow-500 hover:text-yellow-600 cursor-pointer "
+          >
             Sign up
           </a>
         </div>
       </div>
     </div>
-    
   );
 }
 
